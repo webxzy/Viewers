@@ -340,6 +340,7 @@ export default class ExtensionManager {
 
       return extensionModule;
     } catch (ex) {
+      console.log('Exception:', ex);
       throw new Error(
         `Exception thrown while trying to call ${getModuleFnName} for the ${extensionId} extension`
       );
