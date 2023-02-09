@@ -15,12 +15,12 @@ import { ContextMenu } from '@ohif/ui';
 
 import { getEnabledElement as OHIFgetEnabledElement } from './state';
 import CornerstoneViewportDownloadForm from './utils/CornerstoneViewportDownloadForm';
-import { connectToolsToMeasurementService } from './initMeasurementService';
 import callInputDialog from './utils/callInputDialog';
 import { setColormap } from './utils/colormap/transferFunctionHelpers';
 import toggleMPRHangingProtocol from './utils/mpr/toggleMPRHangingProtocol';
 import toggleStackImageSync from './utils/stackSync/toggleStackImageSync';
 import defaultContextMenu from './defaultContextMenu';
+import { getFirstAnnotationSelected } from './utils/measurementServiceMappings/utils/selection';
 
 const commandsModule = ({ servicesManager, commandsManager }) => {
   const {
@@ -40,13 +40,6 @@ const commandsModule = ({ servicesManager, commandsManager }) => {
   const contextMenuController = new ContextMenu.Controller(
     servicesManager,
     commandsManager
-  );
-
-  /* Measurement Service */
-  const measurementServiceSource = connectToolsToMeasurementService(
-    measurementService,
-    displaySetService,
-    cornerstoneViewportService
   );
 
   function _getActiveEnabledElement() {
@@ -174,7 +167,7 @@ const commandsModule = ({ servicesManager, commandsManager }) => {
     // Measurement tool commands:
     deleteMeasurement: ({ uid }) => {
       if (uid) {
-        measurementServiceSource.remove(uid);
+        measurementService.remove(uid);
       }
     },
     setLabel: ({ uid }) => {
@@ -203,13 +196,27 @@ const commandsModule = ({ servicesManager, commandsManager }) => {
     },
 
     updateMeasurement: props => {
-      const { code, uid, measurementKey = 'finding' } = props;
+      const { code, uid, measurementKey = 'finding', textLabel } = props;
       const measurement = measurementService.getMeasurement(uid);
       const updatedMeasurement = {
         ...measurement,
-        [measurementKey]: code,
-        label: code.text,
       };
+      // Call it textLabel as the label value
+      if (textLabel !== undefined) {
+        updatedMeasurement.label = textLabel;
+      }
+      if (code !== undefined) {
+        if (code.ref && !code.CodeValue) {
+          const split = code.ref.indexOf(':');
+          code.CodeValue = code.ref.substring(split + 1);
+          code.CodeMeaning = code.text;
+          code.CodingSchemeDesignator = code.ref.substring(0, split);
+        }
+        updatedMeasurement[measurementKey] = code;
+        if (measurementKey === 'site') {
+          updatedMeasurement.findingSites = code ? [code] : [];
+        }
+      }
       measurementService.update(
         updatedMeasurement.uid,
         updatedMeasurement,

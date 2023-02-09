@@ -50,10 +50,7 @@ function initContextMenu({
     );
 
   const showContextMenu = (contextMenuProps): void => {
-    customizationService.recordInteraction(
-      getShowContextMenu(),
-      contextMenuProps
-    );
+    commandsManager.run(getShowContextMenu(), contextMenuProps);
   };
 
   const onRightClick = event => {

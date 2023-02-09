@@ -2408,7 +2408,7 @@
   resolved "https://registry.npmjs.org/@cornerstonejs/codec-openjph/-/codec-openjph-1.0.3.tgz#4c82642e8a6beb0d263f5a263723aec4225e5300"
   integrity sha512-PK+9N/JL7ZMGum6OKuReRGGhWXpWjRC9WnltQ6aEzRKEQPMg+3WFiQPZowKCCG1I4whv35DYFRi6wu7RyRaEMQ==
 
-"@cornerstonejs/core@0.30.1":
+"@cornerstonejs/core@0.30.1", "@cornerstonejs/core@^0.30.1":
   version "0.30.1"
   resolved "https://registry.yarnpkg.com/@cornerstonejs/core/-/core-0.30.1.tgz#6cb7088260641e7e55de2edb11979b1a0c00c794"
   integrity sha512-A7t6WtPut17uLGpv3cUfk1gSzEvWiFcCg1K3H0WGySdZsf4tIinb5xA+9oD2eaBPbvTXmIef4HWFIAsN3kAEgg==
@@ -2424,14 +2424,6 @@
     detect-gpu "^4.0.45"
     lodash.clonedeep "4.5.0"
 
-"@cornerstonejs/core@^0.28.0":
-  version "0.28.0"
-  resolved "https://registry.yarnpkg.com/@cornerstonejs/core/-/core-0.28.0.tgz#bc5114dfd332fcc5caf4ab049bcb08f6457e5f97"
-  integrity sha512-DSAdH2+8h/rRCTR6WbbGkY+vqnAVVZH47+GgGQQHscEwDD/K3ZO62JMl4LgcgkDzI0LIIZAk6CgAtok31yG/3Q==
-  dependencies:
-    detect-gpu "^4.0.45"
-    lodash.clonedeep "4.5.0"
-
 "@cornerstonejs/streaming-image-volume-loader@^0.11.2":
   version "0.11.2"
   resolved "https://registry.npmjs.org/@cornerstonejs/streaming-image-volume-loader/-/streaming-image-volume-loader-0.11.2.tgz#75a8502a381a402a28ca2022f4bd2733eb90427f"
@@ -2440,12 +2432,12 @@
     "@cornerstonejs/core" "^0.27.1"
     cornerstone-wado-image-loader "^4.8.0"
 
-"@cornerstonejs/tools@0.39.0":
-  version "0.39.0"
-  resolved "https://registry.yarnpkg.com/@cornerstonejs/tools/-/tools-0.39.0.tgz#7d9bac4c55bc19145c2051f7c7150b34570849e4"
-  integrity sha512-xDR51lOEuNIDaTJltZvxDK+BIdIbznXUsWt+OpYiiygCQYt1Lt2eHufO2wVFVPrMgvm0dryF+WQbRVwtWvx4yA==
+"@cornerstonejs/tools@^0.43.2":
+  version "0.43.2"
+  resolved "https://registry.yarnpkg.com/@cornerstonejs/tools/-/tools-0.43.2.tgz#965dab5dcdfdb9bce2cc628af4b2aec3a3fc95b6"
+  integrity sha512-RjoQFVdeM81kO8ZtU6z4tJn2eNVQFw9lVuz6SDaZJUZ7eLTfBFE43RUHbZ9shKUrhD+OeIgEpcdXIZfoF4IE0Q==
   dependencies:
-    "@cornerstonejs/core" "^0.28.0"
+    "@cornerstonejs/core" "^0.30.1"
     lodash.clonedeep "4.5.0"
     lodash.get "^4.4.2"
 
@@ -3591,12 +3583,33 @@
 
 "@kitware/vtk.js@25.9.0":
   version "25.9.0"
-  resolved "https://registry.npmjs.org/@kitware/vtk.js/-/vtk.js-25.9.0.tgz#ecf555c56f6e117b454131c43aba45311a515ecc"
+  resolved "https://registry.yarnpkg.com/@kitware/vtk.js/-/vtk.js-25.9.0.tgz#ecf555c56f6e117b454131c43aba45311a515ecc"
   integrity sha512-L4OQavJkSZjYYvW4GsEVkX7hqPKEbzEKwitq9GcjoAijrV0MINyxkChRbYEEYnTMcSW3i2jZ/jmiXaPfXuhPFQ==
   dependencies:
     "@babel/runtime" "7.17.9"
     commander "9.2.0"
     d3-scale "4.0.2"
+    fflate "0.7.3"
+    gl-matrix "3.4.3"
+    globalthis "1.0.3"
+    seedrandom "3.0.5"
+    shader-loader "1.3.1"
+    shelljs "0.8.5"
+    spark-md5 "3.0.2"
+    stream-browserify "3.0.0"
+    webworker-promise "0.5.0"
+    worker-loader "3.0.8"
+    xmlbuilder2 "3.0.2"
+
+"@kitware/vtk.js@^26.4.0":
+  version "26.5.2"
+  resolved "https://registry.yarnpkg.com/@kitware/vtk.js/-/vtk.js-26.5.2.tgz#becb585f058ab8153f929016dc40652d04302351"
+  integrity sha512-OxIZ/vt406DfmfynzBMNCET5nZVSkzucEIjQEPtxH0TCxWysfGA98Im3LXTtsBwzQWFd+nR/Qln4rVNtdVuBjg==
+  dependencies:
+    "@babel/runtime" "7.17.9"
+    commander "9.2.0"
+    d3-scale "4.0.2"
+    fast-deep-equal "^3.1.3"
     fflate "0.7.3"
     gl-matrix "3.4.3"
     globalthis "1.0.3"
