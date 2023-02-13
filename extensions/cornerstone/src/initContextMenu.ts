@@ -17,7 +17,7 @@ const showContextMenuDefault: Types.CommandCustomization = {
 };
 
 function initContextMenu({
-  CornerstoneViewportService,
+  cornerstoneViewportService,
   customizationService,
   commandsManager,
 }): void {
@@ -98,7 +98,7 @@ function initContextMenu({
 
   function elementEnabledHandler(evt) {
     const { viewportId, element } = evt.detail;
-    const viewportInfo = CornerstoneViewportService.getViewportInfo(viewportId);
+    const viewportInfo = cornerstoneViewportService.getViewportInfo(viewportId);
     const viewportIndex = viewportInfo.getViewportIndex();
     // TODO check update upstream
     setEnabledElement(viewportIndex, element);

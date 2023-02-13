@@ -147,7 +147,7 @@ export default async function init({
   );
 
   initContextMenu({
-    CornerstoneViewportService,
+    cornerstoneViewportService,
     customizationService,
     commandsManager,
   });
