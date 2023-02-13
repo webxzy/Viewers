@@ -23,8 +23,8 @@
  * | offset           | {number}           |
  */
 import { DICOMWeb, utils } from '@ohif/core';
-import { sortStudySeries } from '@ohif/core/src/utils/sortStudy';
 
+const { sortStudySeries } = utils;
 const { getString, getName, getModalities } = DICOMWeb;
 
 /**

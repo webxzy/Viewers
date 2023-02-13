@@ -12,6 +12,17 @@ import { Types } from '@ohif/core';
 import init from './init';
 import commandsModule from './commandsModule';
 import getHangingProtocolModule from './getHangingProtocolModule';
+import getSOPInstanceAttributes from './utils/measurementServiceMappings/utils/getSOPInstanceAttributes';
+import {
+  getAnnotationColor,
+  setAnnotationColor,
+  setAnnotationLineDash,
+} from './utils/measurementServiceMappings/utils/style';
+import {
+  isAnnotationSelected,
+  setAnnotationSelected,
+} from './utils/measurementServiceMappings/utils/selection';
+import { setAnnotationVisibility } from './utils/measurementServiceMappings/utils/visibility';
 import ToolGroupService from './services/ToolGroupService';
 import SyncGroupService from './services/SyncGroupService';
 import SegmentationService from './services/SegmentationService';
@@ -150,4 +161,19 @@ const cornerstoneExtension: Types.Extensions.Extension = {
   },
 };
 
+// TODO update upstream. It seems there is a new way of exporting modules.
+const extensionUtils = {
+  getSOPInstanceAttributes,
+  getEnabledElement,
+  annotation: {
+    setAnnotationColor,
+    setAnnotationLineDash,
+    getAnnotationColor,
+    setAnnotationSelected,
+    setAnnotationVisibility,
+    isAnnotationSelected,
+  },
+};
+
+export { extensionUtils };
 export default cornerstoneExtension;

@@ -1,5 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import PropTypes from 'prop-types';
+import { ServicesManager } from '@ohif/core';
 import { MeasurementTable, Dialog, Input, useViewportGrid } from '@ohif/ui';
 import ActionButtons from './ActionButtons';
 import debounce from 'lodash.debounce';
@@ -9,7 +10,7 @@ import createReportDialogPrompt, {
   CREATE_REPORT_DIALOG_RESPONSE,
 } from './createReportDialogPrompt';
 import createReportAsync from '../Actions/createReportAsync';
-import getNextSRSeriesNumber from '../utils/getNextSRSeriesNumber';
+import getSameSeriesOptions from '../utils/getSameSeriesOptions';
 
 const { downloadCSVReport } = utils;
 
@@ -25,7 +26,7 @@ export default function PanelMeasurementTable({
     uiDialogService,
     uiNotificationService,
     displaySetService,
-  } = servicesManager.services;
+  } = (servicesManager as ServicesManager).services;
   const [displayMeasurements, setDisplayMeasurements] = useState([]);
 
   useEffect(() => {
@@ -109,17 +110,17 @@ export default function PanelMeasurementTable({
           ? 'Research Derived Series' // default
           : promptResult.value; // provided value
 
-      const SeriesNumber = getNextSRSeriesNumber(displaySetService);
+      const options = getSameSeriesOptions(
+        SeriesDescription,
+        displaySetService
+      );
 
       const displaySetInstanceUIDs = await createReportAsync(
         servicesManager,
         commandsManager,
         dataSource,
         trackedMeasurements,
-        {
-          SeriesDescription,
-          SeriesNumber,
-        }
+        options
       );
     }
   }
