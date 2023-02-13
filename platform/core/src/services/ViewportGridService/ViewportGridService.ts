@@ -66,8 +66,11 @@ class ViewportGridService extends PubSubService {
 
   public setActiveViewportIndex(index) {
     this.serviceImplementation._setActiveViewportIndex(index);
+    const state = this.getState();
+    const viewportId = state.viewports[index]?.viewportOptions?.viewportId;
     this._broadcastEvent(this.EVENTS.ACTIVE_VIEWPORT_INDEX_CHANGED, {
       viewportIndex: index,
+      viewportId,
     });
   }
 
@@ -93,8 +96,12 @@ class ViewportGridService extends PubSubService {
     this.serviceImplementation._setDisplaySetsForViewports(viewports);
   }
 
-  public setLayout({ numCols, numRows }) {
-    this.serviceImplementation._setLayout({ numCols, numRows });
+  public setLayout({ numCols, numRows, findOrCreateViewport = undefined }) {
+    this.serviceImplementation._setLayout({
+      numCols,
+      numRows,
+      findOrCreateViewport,
+    });
   }
 
   public reset() {
@@ -111,8 +118,8 @@ class ViewportGridService extends PubSubService {
     this.serviceImplementation._onModeExit();
   }
 
-  public setCachedLayout({ cacheId, cachedLayout }) {
-    this.serviceImplementation._setCachedLayout({ cacheId, cachedLayout });
+  public setCachedLayout(cacheId?: string): void {
+    this.serviceImplementation._setCachedLayout(cacheId);
   }
 
   public restoreCachedLayout(cacheId) {

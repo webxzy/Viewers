@@ -2408,18 +2408,10 @@
   resolved "https://registry.npmjs.org/@cornerstonejs/codec-openjph/-/codec-openjph-1.0.3.tgz#4c82642e8a6beb0d263f5a263723aec4225e5300"
   integrity sha512-PK+9N/JL7ZMGum6OKuReRGGhWXpWjRC9WnltQ6aEzRKEQPMg+3WFiQPZowKCCG1I4whv35DYFRi6wu7RyRaEMQ==
 
-"@cornerstonejs/core@0.30.1":
-  version "0.30.1"
-  resolved "https://registry.yarnpkg.com/@cornerstonejs/core/-/core-0.30.1.tgz#6cb7088260641e7e55de2edb11979b1a0c00c794"
-  integrity sha512-A7t6WtPut17uLGpv3cUfk1gSzEvWiFcCg1K3H0WGySdZsf4tIinb5xA+9oD2eaBPbvTXmIef4HWFIAsN3kAEgg==
-  dependencies:
-    detect-gpu "^4.0.45"
-    lodash.clonedeep "4.5.0"
-
-"@cornerstonejs/core@^0.27.1":
-  version "0.27.1"
-  resolved "https://registry.npmjs.org/@cornerstonejs/core/-/core-0.27.1.tgz#1c56697cee8071eacfd9b1ee6f59c0fa6071accc"
-  integrity sha512-RyZicIallTZtr8i1BDkZ3U1JrwPZF7DYj9dj5uwE4WdhoPB+Rp77k5T7BH7gHsNWPyJjPgZwyq+tgV5sdD7zXg==
+"@cornerstonejs/core@0.31.0", "@cornerstonejs/core@^0.31.0":
+  version "0.31.0"
+  resolved "https://registry.yarnpkg.com/@cornerstonejs/core/-/core-0.31.0.tgz#087731cc9c1745f02e8936a55956c4ca5d52f3d9"
+  integrity sha512-qJmR2JpPPuSJsIDW7seH+bJrhE/e5QNwuk2T8EzlWtHR3QcB2lSq/o7cX6kGOJDwn4KrE1p/9QZAJ4GaFlBoyQ==
   dependencies:
     detect-gpu "^4.0.45"
     lodash.clonedeep "4.5.0"
@@ -2432,12 +2424,12 @@
     detect-gpu "^4.0.45"
     lodash.clonedeep "4.5.0"
 
-"@cornerstonejs/streaming-image-volume-loader@^0.11.2":
-  version "0.11.2"
-  resolved "https://registry.npmjs.org/@cornerstonejs/streaming-image-volume-loader/-/streaming-image-volume-loader-0.11.2.tgz#75a8502a381a402a28ca2022f4bd2733eb90427f"
-  integrity sha512-cFkAKjcIk6V2p3hZ2gpvTGMBmPNrDlg/Ku6CTCqz7D+U6pEQPvct2e42G1tG+Y4MtnYgGpC+oYAeu9Zt/C6XlQ==
+"@cornerstonejs/streaming-image-volume-loader@^0.12.0":
+  version "0.12.0"
+  resolved "https://registry.yarnpkg.com/@cornerstonejs/streaming-image-volume-loader/-/streaming-image-volume-loader-0.12.0.tgz#48016e5910a21957d883d63e9f82f8e7e89966ed"
+  integrity sha512-0ga+G4SZ0O2NjQiKBk1V2HhFcga4IZJIoUfpLiHhET00sbIQpWkVIvRO4TD5REc1jXIgekt1vgVVW+ttOwET1Q==
   dependencies:
-    "@cornerstonejs/core" "^0.27.1"
+    "@cornerstonejs/core" "^0.31.0"
     cornerstone-wado-image-loader "^4.8.0"
 
 "@cornerstonejs/tools@0.39.0":

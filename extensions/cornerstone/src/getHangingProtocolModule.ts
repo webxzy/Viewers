@@ -1,10 +1,9 @@
 const mpr = {
-  id: 'mpr',
   locked: true,
   hasUpdatedPriorsInformation: false,
   name: 'mpr',
   createdDate: '2021-02-23T19:22:08.894Z',
-  modifiedDate: '2022-10-04T19:22:08.894Z',
+  modifiedDate: '2023-01-24',
   availableTo: {},
   editableBy: {},
   protocolMatchingRules: [],
@@ -27,8 +26,7 @@ const mpr = {
   },
   stages: [
     {
-      id: 'mpr3Stage',
-      name: 'mpr',
+      name: 'MPR 1x3',
       viewportStructure: {
         layoutType: 'grid',
         properties: {
@@ -60,7 +58,7 @@ const mpr = {
         {
           viewportOptions: {
             toolGroupId: 'mpr',
-            viewportType: 'volume',
+            viewportType: 'orthographic',
             orientation: 'axial',
             initialImageOptions: {
               preset: 'middle',
@@ -77,6 +75,7 @@ const mpr = {
           displaySets: [
             {
               id: 'mprDisplaySet',
+              reuseId: 'activeDisplaySet',
             },
           ],
         },
@@ -100,6 +99,7 @@ const mpr = {
           displaySets: [
             {
               id: 'mprDisplaySet',
+              reuseId: 'activeDisplaySet',
             },
           ],
         },
@@ -123,6 +123,7 @@ const mpr = {
           displaySets: [
             {
               id: 'mprDisplaySet',
+              reuseId: 'activeDisplaySet',
             },
           ],
         },

@@ -19,7 +19,11 @@ import { setColormap } from './utils/colormap/transferFunctionHelpers';
 import toggleMPRHangingProtocol from './utils/mpr/toggleMPRHangingProtocol';
 import toggleStackImageSync from './utils/stackSync/toggleStackImageSync';
 
-const commandsModule = ({ servicesManager }) => {
+const commandsModule = ({
+  servicesManager,
+}: {
+  servicesManager: ServicesManager;
+}): React.FunctionComponent => {
   const {
     viewportGridService,
     toolGroupService,
@@ -27,9 +31,8 @@ const commandsModule = ({ servicesManager }) => {
     toolbarService,
     uiDialogService,
     cornerstoneViewportService,
-    hangingProtocolService,
     uiNotificationService,
-  } = (servicesManager as ServicesManager).services;
+  } = servicesManager.services;
 
   function _getActiveViewportEnabledElement() {
     const { activeViewportIndex } = viewportGridService.getState();
@@ -153,7 +156,7 @@ const commandsModule = ({ servicesManager }) => {
       };
 
       const toolGroup = _getToolGroup(toolGroupId);
-      const toolGroupViewportIds = toolGroup.getViewportIds();
+      const toolGroupViewportIds = toolGroup?.getViewportIds?.();
 
       // if toolGroup has been destroyed, or its viewports have been removed
       if (!toolGroupViewportIds || !toolGroupViewportIds.length) {
@@ -407,9 +410,6 @@ const commandsModule = ({ servicesManager }) => {
         (activeViewportIndex - 1 + viewports.length) % viewports.length;
       viewportGridService.setActiveViewportIndex(nextViewportIndex);
     },
-    setHangingProtocol: ({ protocolId }) => {
-      hangingProtocolService.setProtocol(protocolId);
-    },
     toggleMPR: ({ toggledState }) => {
       toggleMPRHangingProtocol({
         toggledState,
@@ -417,6 +417,7 @@ const commandsModule = ({ servicesManager }) => {
         getToolGroup: _getToolGroup,
       });
     },
+
     toggleStackImageSync: ({ toggledState }) => {
       toggleStackImageSync({
         getEnabledElement,
@@ -554,11 +555,6 @@ const commandsModule = ({ servicesManager }) => {
     },
     setViewportColormap: {
       commandFn: actions.setViewportColormap,
-      storeContexts: [],
-      options: {},
-    },
-    setHangingProtocol: {
-      commandFn: actions.setHangingProtocol,
       storeContexts: [],
       options: {},
     },

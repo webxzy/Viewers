@@ -10,7 +10,10 @@ export default function getCornerstoneViewportType(
     return Enums.ViewportType.STACK;
   }
 
-  if (viewportType.toLowerCase() === VOLUME) {
+  if (
+    viewportType.toLowerCase() === VOLUME ||
+    viewportType.toLowerCase() === 'orthographic'
+  ) {
     return Enums.ViewportType.ORTHOGRAPHIC;
   }
 

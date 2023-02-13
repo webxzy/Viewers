@@ -1,7 +1,6 @@
 type DisplaySetInfo = {
-  SeriesInstanceUID: string;
-  displaySetInstanceUID: string;
-  displaySetOptions: Record<string, unknown>;
+  displaySetInstanceUID?: string;
+  displaySetOptions: DisplaySetOptions;
 };
 
 type ViewportMatchDetails = {
@@ -10,11 +9,10 @@ type ViewportMatchDetails = {
 };
 
 type DisplaySetMatchDetails = {
-  SeriesInstanceUID: string;
-  StudyInstanceUID: string;
+  StudyInstanceUID?: string;
   displaySetInstanceUID: string;
   matchDetails?: any;
-  matchingScores?: any[];
+  matchingScores?: DisplaySetMatchDetails[];
   sortingInfo?: any;
 };
 
@@ -25,21 +23,20 @@ type DisplaySetAndViewportOptions = {
   displaySetOptions: DisplaySetOptions;
 }
 
-type ViewportSpecificProtocolOptions = {
-  [viewportIndex: string]: DisplaySetAndViewportOptions
+type SetProtocolOptions = {
+  // Contains a map of reuseId values to display set UIDs
+  reuseIdMap?: Record<string, string>;
+
+  // Indicates a stage to apply:
+  // The stage can be specified by id or by index
+  // TODO - make the stageId a regexp to allow searching for first matching
+  stageId?: string;
+  stageIndex?: number;
 }
-
-type GlobalProtocolOptions = DisplaySetAndViewportOptions
-
-
-type SetProtocolOptions =
-  ViewportSpecificProtocolOptions | GlobalProtocolOptions;
-
 
 type HangingProtocolMatchDetails = {
   displaySetMatchDetails: Map<string, DisplaySetMatchDetails>;
   viewportMatchDetails: Map<number, ViewportMatchDetails>;
-  hpAlreadyApplied: Map<number, boolean>;
 };
 
 type MatchingRule = {
@@ -92,7 +89,7 @@ type SyncGroup = {
 
 type initialImageOptions = {
   index?: number;
-  preset? : string; // todo: type more
+  preset?: string; // todo: type more
 }
 
 type ViewportOptions = {
@@ -113,6 +110,10 @@ type DisplaySetOptions = {
   // to display the second matching series (displaySetIndex==1)
   // This cannot easily be done with the matching rules directly.
   displaySetIndex?: number;
+
+  // A key to select a display set UID to reuse from the existing sets.
+  reuseId?: string;
+
   // The options to apply to the display set.
   options?: Record<string, unknown>;
 };
@@ -120,13 +121,29 @@ type DisplaySetOptions = {
 type Viewport = {
   viewportOptions: ViewportOptions;
   displaySets: DisplaySetOptions[];
+  displaySetsByPosition?: Record<string, DisplaySetOptions[]>;
 };
+
+/**
+ * Defines which viewports are required - either for activating the stage
+ * at all, or for being a preferred stage (activated by default)
+ */
+type ViewportsRequired = number;
+
+type StageEnabled = 'disabled' | 'enabled' | 'passive';
 
 type ProtocolStage = {
   id: string;
   name: string;
   viewportStructure: ViewportStructure;
   viewports: Viewport[];
+  enable?: StageEnabled;
+  // The set of viewports that is required for this stage to be used
+  requiredViewports?: ViewportsRequired;
+  // The set of viewports that is preferred for this viewport, to be manually
+  // activated
+  preferredViewports?: ViewportsRequired;
+  defaultViewport?: Viewport;
   createdDate?: string;
 };
 
@@ -135,6 +152,7 @@ type Protocol = {
   id: string;
   // Selects which display sets are given a specific name.
   displaySetSelectors: Record<string, DisplaySetSelector>;
+  defaultViewport?: Viewport;
   stages: ProtocolStage[];
   // Optional
   locked?: boolean;
@@ -172,8 +190,6 @@ export type {
   SyncGroup,
   initialImageOptions,
   DisplaySetInfo,
-  GlobalProtocolOptions,
-  ViewportSpecificProtocolOptions,
   DisplaySetAndViewportOptions,
   ProtocolGenerator,
 };

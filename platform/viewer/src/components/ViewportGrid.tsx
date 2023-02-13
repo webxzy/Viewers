@@ -1,5 +1,6 @@
 import React, { useEffect, useCallback } from 'react';
 import PropTypes from 'prop-types';
+import { ServicesManager } from '@ohif/core';
 import { ViewportGrid, ViewportPane, useViewportGrid } from '@ohif/ui';
 import { utils } from '@ohif/core';
 import EmptyViewport from './EmptyViewport';
@@ -22,11 +23,27 @@ const ORIENTATION_MAP = {
   },
 };
 
+const createHpInfo = (protocol, stage) => {
+  return {
+    hangingProtocolId: protocol.id,
+    stageId: stage.stageId,
+    stageIdx: protocol.stages.findIndex(it => it === stage),
+  };
+};
+
+const compareViewportOptions = (opts1, opts2) => {
+  if ((opts1.viewportType || 'stack') != opts2.viewportType) {
+    return false;
+  }
+  return true;
+};
+
 function ViewerViewportGrid(props) {
   const { servicesManager, viewportComponents, dataSource } = props;
   const [viewportGrid, viewportGridService] = useViewportGrid();
 
-  const { numCols, numRows, activeViewportIndex, viewports } = viewportGrid;
+  const { layout, activeViewportIndex, viewports } = viewportGrid;
+  const { numCols, numRows } = layout;
 
   // TODO -> Need some way of selecting which displaySets hit the viewports.
   const {
@@ -34,86 +51,76 @@ function ViewerViewportGrid(props) {
     measurementService,
     hangingProtocolService,
     uiNotificationService,
-  } = servicesManager.services;
+  } = (servicesManager as ServicesManager).services;
 
   /**
-   * This callback runs only after displaySets have changed (created and added or modified)
+   * This callback runs after the viewports structure has changed in any way.
+   * On initial display, that means if it has changed by applying a HangingProtocol,
+   * while subsequently it may mean by changing the stage or by manually adjusting
+   * the layout.
+
    */
-  const updateDisplaySetsForViewports = useCallback(
-    availableDisplaySets => {
-      if (!availableDisplaySets.length) {
+  const updateDisplaySetsFromProtocol = (
+    protocol,
+    stage,
+    viewportMatchDetails
+  ) => {
+    const availableDisplaySets = displaySetService.getActiveDisplaySets();
+
+    if (!availableDisplaySets.length) {
+      console.log('No available display sets', availableDisplaySets);
+      return;
+    }
+
+    // Match each viewport individually
+    const { layoutType } = stage.viewportStructure;
+    const stageProps = stage.viewportStructure.properties;
+    const { columns: numCols, rows: numRows, layoutOptions = [] } = stageProps;
+
+    /**
+     * This find or create viewport uses the hanging protocol results to
+     * specify the viewport match details, which specifies the size and
+     * setup of the various viewports.
+     */
+    const findOrCreateViewport = viewportIndex => {
+      const details = viewportMatchDetails.get(viewportIndex);
+      if (!details) {
+        console.log('No match details for viewport', viewportIndex);
         return;
       }
 
-      const {
-        viewportMatchDetails,
-        hpAlreadyApplied,
-      } = hangingProtocolService.getMatchDetails();
+      const { displaySetsInfo, viewportOptions } = details;
+      const displaySetUIDsToHang = [];
+      const displaySetUIDsToHangOptions = [];
 
-      if (!viewportMatchDetails.size) {
-        return;
-      }
-
-      // Match each viewport individually
-      const numViewports = viewportGrid.numRows * viewportGrid.numCols;
-      for (
-        let viewportIndex = 0;
-        viewportIndex < numViewports;
-        viewportIndex++
-      ) {
-        if (hpAlreadyApplied.get(viewportIndex)) {
-          continue;
-        }
-
-        // if current viewport doesn't have a match
-        if (viewportMatchDetails.get(viewportIndex) === undefined) {
-          return;
-        }
-
-        const { displaySetsInfo, viewportOptions } = viewportMatchDetails.get(
-          viewportIndex
-        );
-
-        const displaySetUIDsToHang = [];
-        const displaySetUIDsToHangOptions = [];
-        displaySetsInfo.forEach(
-          ({ displaySetInstanceUID, displaySetOptions }) => {
-            if (!displaySetInstanceUID) {
-              return;
-            }
-
+      displaySetsInfo.forEach(
+        ({ displaySetInstanceUID, displaySetOptions }) => {
+          if (displaySetInstanceUID) {
             displaySetUIDsToHang.push(displaySetInstanceUID);
-            displaySetUIDsToHangOptions.push(displaySetOptions);
           }
-        );
 
-        viewportGridService.setDisplaySetsForViewport({
-          viewportIndex: viewportIndex,
-          displaySetInstanceUIDs: displaySetUIDsToHang,
-          viewportOptions,
-          displaySetOptions: displaySetUIDsToHangOptions,
-        });
-
-        // During setting displaySets for viewport, we need to update the hanging protocol
-        // but some viewports contain more than one display set (fusion), and their displaySet
-        // will not be available at the time of setting displaySets for viewport. So we need to
-        // update the hanging protocol after making sure all the matched display sets are available
-        // and set on the viewport
-        if (displaySetUIDsToHang.length === displaySetsInfo.length) {
-          // The following will set the viewportsDisplaySetsMatched state
-
-          const suppressEvent = true;
-          const applied = true;
-          hangingProtocolService.setHangingProtocolAppliedForViewport(
-            viewportIndex,
-            applied,
-            suppressEvent
-          );
+          displaySetUIDsToHangOptions.push(displaySetOptions);
         }
-      }
-    },
-    [viewportGrid, numRows, numCols]
-  );
+      );
+
+      return {
+        displaySetInstanceUIDs: displaySetUIDsToHang,
+        displaySetOptions: displaySetUIDsToHangOptions,
+        viewportOptions: {
+          ...viewportOptions,
+        },
+      };
+    };
+
+    viewportGridService.setLayout({
+      numRows,
+      numCols,
+      layoutType,
+      layoutOptions,
+      hpInfo: createHpInfo(protocol, stage),
+      findOrCreateViewport,
+    });
+  };
 
   const _getUpdatedViewports = useCallback(
     (viewportIndex, displaySetInstanceUID) => {
@@ -139,22 +146,12 @@ function ViewerViewportGrid(props) {
     [hangingProtocolService, uiNotificationService]
   );
 
-  useEffect(() => {
-    const displaySets = displaySetService.getActiveDisplaySets();
-    updateDisplaySetsForViewports(displaySets);
-  }, [numRows, numCols]);
-
-  // Layout change based on hanging protocols
+  // Using Hanging protocol engine to match the displaySets
   useEffect(() => {
     const { unsubscribe } = hangingProtocolService.subscribe(
-      hangingProtocolService.EVENTS.NEW_LAYOUT,
-      ({ layoutType, numRows, numCols, layoutOptions }) => {
-        viewportGridService.setLayout({
-          numRows,
-          numCols,
-          layoutType,
-          layoutOptions,
-        });
+      hangingProtocolService.EVENTS.PROTOCOL_CHANGED,
+      ({ protocol, stage, viewportMatchDetails }) => {
+        updateDisplaySetsFromProtocol(protocol, stage, viewportMatchDetails);
       }
     );
 
@@ -162,21 +159,6 @@ function ViewerViewportGrid(props) {
       unsubscribe();
     };
   }, []);
-
-  // Using Hanging protocol engine to match the displaySets
-  useEffect(() => {
-    const { unsubscribe } = hangingProtocolService.subscribe(
-      hangingProtocolService.EVENTS.PROTOCOL_CHANGED,
-      () => {
-        const displaySets = displaySetService.getActiveDisplaySets();
-        updateDisplaySetsForViewports(displaySets);
-      }
-    );
-
-    return () => {
-      unsubscribe();
-    };
-  }, [viewports]);
 
   useEffect(() => {
     const { unsubscribe } = measurementService.subscribe(
@@ -318,6 +300,10 @@ function ViewerViewportGrid(props) {
       const viewportIndex = i;
       const isActive = activeViewportIndex === viewportIndex;
       const paneMetadata = viewports[i] || {};
+      const viewportId = paneMetadata.viewportId || `viewport-${i}`;
+      if (!paneMetadata.viewportId) {
+        paneMetadata.viewportId = viewportId;
+      }
       const {
         displaySetInstanceUIDs,
         viewportOptions,
@@ -367,7 +353,7 @@ function ViewerViewportGrid(props) {
 
       viewportPanes[i] = (
         <ViewportPane
-          key={viewportIndex}
+          key={viewportId}
           acceptDropsFor="displayset"
           onDrop={onDropHandler.bind(null, viewportIndex)}
           onInteraction={onInteractionHandler}
@@ -403,7 +389,7 @@ function ViewerViewportGrid(props) {
   }, [viewports, activeViewportIndex, viewportComponents, dataSource]);
 
   /**
-   * Loading indicator until numCols and numRows are gotten from the hangingProtocolService
+   * Loading indicator until numCols and numRows are gotten from the HangingProtocolService
    */
   if (!numRows || !numCols) {
     return null;
@@ -419,6 +405,7 @@ function ViewerViewportGrid(props) {
 
 ViewerViewportGrid.propTypes = {
   viewportComponents: PropTypes.array.isRequired,
+  servicesManager: PropTypes.instanceOf(ServicesManager),
 };
 
 ViewerViewportGrid.defaultProps = {
@@ -428,7 +415,7 @@ ViewerViewportGrid.defaultProps = {
 function _getViewportComponent(
   displaySets,
   viewportComponents,
-  uiNotificationService
+  UINotificationService
 ) {
   if (!displaySets || !displaySets.length) {
     return EmptyViewport;
@@ -453,7 +440,7 @@ function _getViewportComponent(
   }
 
   console.log("Can't show displaySet", SOPClassHandlerId, displaySets[0]);
-  uiNotificationService.show({
+  UINotificationService.show({
     title: 'Viewport Not Supported Yet',
     message: `Cannot display SOPClassId of ${displaySets[0].SOPClassUID} yet`,
     type: 'error',
