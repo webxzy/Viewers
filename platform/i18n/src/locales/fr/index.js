@@ -9,9 +9,8 @@ import StudyList from './StudyList.json';
 import UserPreferencesModal from './UserPreferencesModal.json';
 import ViewportDownloadForm from './ViewportDownloadForm.json';
 
-export default { 
-  'fr': {
-    AboutModal,
+export default {
+  fr: {
     Buttons,
     CineDialog,
     Common,
@@ -20,6 +19,5 @@ export default {
     MeasurementTable,
     StudyList,
     UserPreferencesModal,
-    ViewportDownloadForm,
-  }
+  },
 };

@@ -124,7 +124,9 @@ function getOverallProgress(list) {
       status.total++;
       if (isValidProgress(task.progress)) {
         status.partial += task.progress;
-        if (task.progress === 1.0 && task.failed) status.failures++;
+        if (task.progress === 1.0 && task.failed) {
+          status.failures++;
+        }
       }
       task = task.next;
     }
@@ -318,7 +320,7 @@ function notify(list, data) {
  * Exports
  */
 
-export {
+const progressTrackingUtils = {
   createList,
   isList,
   createTask,
@@ -334,3 +336,5 @@ export {
   addObserver,
   removeObserver,
 };
+
+export default progressTrackingUtils;

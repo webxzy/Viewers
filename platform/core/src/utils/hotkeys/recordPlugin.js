@@ -1,10 +1,9 @@
 /**
  * This extension allows you to record a sequence using Mousetrap.
- * {@link https://craig.is/killing/mice}
  *
  * @author Dan Tao <daniel.tao@gmail.com>
  */
-export default function(Mousetrap) {
+export default function recordPlugin(Mousetrap, options = { timeout: 100 }) {
   /**
    * the sequence currently being recorded
    *
@@ -109,7 +108,7 @@ export default function(Mousetrap) {
     _recordedSequence.push(_currentRecordedKeys);
     _currentRecordedKeys = [];
     _recordedCharacterKey = false;
-    _finishRecording();
+    _restartRecordTimer();
   }
 
   /**
@@ -168,7 +167,7 @@ export default function(Mousetrap) {
    */
   function _restartRecordTimer() {
     clearTimeout(_recordTimer);
-    _recordTimer = setTimeout(_finishRecording, 1000);
+    _recordTimer = setTimeout(_finishRecording, options.timeout);
   }
 
   /**
@@ -208,7 +207,6 @@ export default function(Mousetrap) {
     var self = this;
     self.recording = true;
   };
-
   Mousetrap.prototype.handleKey = function() {
     var self = this;
     _handleKey.apply(self, arguments);

@@ -1,8 +1,12 @@
 {
   "recommendations": [
     "esbenp.prettier-vscode",
-    "sysoev.language-stylus",
     "dbaeumer.vscode-eslint",
-    "mikestead.dotenv"
+    "mikestead.dotenv",
+    "bungcip.better-toml",
+    "silvenon.mdx",
+    "gruntfuggly.todo-tree",
+    "wayou.vscode-todo-highlight",
+    "bradlc.vscode-tailwindcss"
   ]
 }

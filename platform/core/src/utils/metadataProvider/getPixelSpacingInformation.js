@@ -3,7 +3,6 @@ import log from '../../log';
 export default function getPixelSpacingInformation(instance) {
   // See http://gdcm.sourceforge.net/wiki/index.php/Imager_Pixel_Spacing
 
-  // TODO: Add Ultrasound region spacing
   // TODO: Add manual calibration
 
   // TODO: Use ENUMS from dcmjs
@@ -124,7 +123,7 @@ export default function getPixelSpacingInformation(instance) {
     };
   }
 
-    log.info(
+  log.info(
     'Unknown combination of PixelSpacing and ImagerPixelSpacing identified. Unable to determine spacing.'
   );
 }

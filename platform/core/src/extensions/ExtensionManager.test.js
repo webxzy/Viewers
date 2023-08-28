@@ -1,11 +1,10 @@
-import { Exception } from 'handlebars';
-import ExtensionManager from './ExtensionManager.js';
-import MODULE_TYPES from './MODULE_TYPES.js';
+import ExtensionManager from './ExtensionManager';
+import MODULE_TYPES from './MODULE_TYPES';
 import log from './../log.js';
 
 jest.mock('./../log.js');
 
-describe('ExtensionManager.js', () => {
+describe('ExtensionManager.ts', () => {
   let extensionManager, commandsManager, servicesManager, appConfig;
 
   beforeEach(() => {
@@ -16,6 +15,13 @@ describe('ExtensionManager.js', () => {
     };
     servicesManager = {
       registerService: jest.fn(),
+      services: {
+        // Required for DataSource Module initiation
+        UserAuthenticationService: jest.fn(),
+        HangingProtocolService: {
+          addProtocol: jest.fn(),
+        },
+      },
     };
     appConfig = {
       testing: true,
@@ -37,18 +43,18 @@ describe('ExtensionManager.js', () => {
   });
 
   describe('registerExtensions()', () => {
-    it('calls registerExtension() for each extension', () => {
+    it('calls registerExtension() for each extension', async () => {
       extensionManager.registerExtension = jest.fn();
 
       // SUT
       const fakeExtensions = [{ one: '1' }, { two: '2' }, { three: '3 ' }];
-      extensionManager.registerExtensions(fakeExtensions);
+      await extensionManager.registerExtensions(fakeExtensions);
 
       // Assert
       expect(extensionManager.registerExtension.mock.calls.length).toBe(3);
     });
 
-    it('calls registerExtension() for each extension passing its configuration if tuple', () => {
+    it('calls registerExtension() for each extension passing its configuration if tuple', async () => {
       const fakeConfiguration = { testing: true };
       extensionManager.registerExtension = jest.fn();
 
@@ -58,7 +64,7 @@ describe('ExtensionManager.js', () => {
         [{ two: '2' }, fakeConfiguration],
         { three: '3 ' },
       ];
-      extensionManager.registerExtensions(fakeExtensions);
+      await extensionManager.registerExtensions(fakeExtensions);
 
       // Assert
       expect(extensionManager.registerExtension.mock.calls[1][1]).toEqual(
@@ -70,7 +76,7 @@ describe('ExtensionManager.js', () => {
   describe('registerExtension()', () => {
     it('calls preRegistration() for extension', () => {
       // SUT
-      const fakeExtension = { one: '1', preRegistration: jest.fn() };
+      const fakeExtension = { id: '1', preRegistration: jest.fn() };
       extensionManager.registerExtension(fakeExtension);
 
       // Assert
@@ -81,34 +87,42 @@ describe('ExtensionManager.js', () => {
       const extensionConfiguration = { config: 'Some configuration' };
 
       // SUT
-      const extension = { one: '1', preRegistration: jest.fn() };
+      const extension = { id: '1', preRegistration: jest.fn() };
       extensionManager.registerExtension(extension, extensionConfiguration);
 
       // Assert
       expect(extension.preRegistration.mock.calls[0][0]).toEqual({
         servicesManager,
         commandsManager,
+        extensionManager,
         appConfig,
         configuration: extensionConfiguration,
       });
     });
 
-    it('logs a warning if the extension is null or undefined', () => {
+    it('logs a warning if the extension is null or undefined', async () => {
       const undefinedExtension = undefined;
       const nullExtension = null;
 
-      extensionManager.registerExtension(undefinedExtension);
-      extensionManager.registerExtension(nullExtension);
+      await expect(
+        extensionManager.registerExtension(undefinedExtension)
+      ).rejects.toThrow(
+        new Error('Attempting to register a null/undefined extension.')
+      );
 
-      expect(log.warn.mock.calls.length).toBe(2);
+      await expect(
+        extensionManager.registerExtension(nullExtension)
+      ).rejects.toThrow(
+        new Error('Attempting to register a null/undefined extension.')
+      );
     });
 
-    it('logs a warning if the extension does not have an id', () => {
+    it('logs a warning if the extension does not have an id', async () => {
       const extensionWithoutId = {};
 
-      extensionManager.registerExtension(extensionWithoutId);
-
-      expect(log.warn.mock.calls.length).toBe(1);
+      await expect(
+        extensionManager.registerExtension(extensionWithoutId)
+      ).rejects.toThrow(new Error('Extension ID not set'));
     });
 
     it('tracks which extensions have been registered', () => {
@@ -147,20 +161,17 @@ describe('ExtensionManager.js', () => {
       );
     });
 
-    it('logs an error if an exception is thrown while retrieving a module', () => {
+    it('logs an error if an exception is thrown while retrieving a module', async () => {
       const extensionWithBadModule = {
         id: 'hello-world',
         getViewportModule: () => {
-          throw new Exception('Hello World');
+          throw new Error('Hello World');
         },
       };
 
-      extensionManager.registerExtension(extensionWithBadModule);
-
-      expect(log.error.mock.calls.length).toBe(1);
-      expect(log.error.mock.calls[0][0]).toContain(
-        'Exception thrown while trying to call'
-      );
+      await expect(
+        extensionManager.registerExtension(extensionWithBadModule)
+      ).rejects.toThrow();
     });
 
     it('successfully passes dependencies to each module along with extension configuration', () => {
@@ -182,41 +193,62 @@ describe('ExtensionManager.js', () => {
           expect(extension[module].mock.calls[0][0]).toEqual({
             servicesManager,
             commandsManager,
+            hotkeysManager: undefined,
             appConfig,
             configuration: extensionConfiguration,
-            api: undefined,
             extensionManager,
           });
         }
       });
     });
 
-    it('successfully registers a module for each module type', () => {
+    it('successfully registers a module for each module type', async () => {
       const extension = {
         id: 'hello-world',
         getViewportModule: () => {
-          return {};
+          return [{ name: 'test' }];
         },
         getSopClassHandlerModule: () => {
-          return {};
+          return [{ name: 'test' }];
         },
         getPanelModule: () => {
-          return {};
+          return [{ name: 'test' }];
         },
         getToolbarModule: () => {
-          return {};
+          return [{ name: 'test' }];
         },
         getCommandsModule: () => {
-          return {};
+          return [{ name: 'test' }];
+        },
+        getLayoutTemplateModule: () => {
+          return [{ name: 'test' }];
+        },
+        getDataSourcesModule: () => {
+          return [{ name: 'test' }];
+        },
+        getHangingProtocolModule: () => {
+          return [{ name: 'test' }];
+        },
+        getContextModule: () => {
+          return [{ name: 'test' }];
+        },
+        getUtilityModule: () => {
+          return [{ name: 'test' }];
+        },
+        getCustomizationModule: () => {
+          return [{ name: 'test' }];
+        },
+        getStateSyncModule: () => {
+          return [{ name: 'test' }];
         },
       };
 
-      extensionManager.registerExtension(extension);
+      await extensionManager.registerExtension(extension);
 
       // Registers 1 module per module type
       Object.keys(extensionManager.modules).forEach(moduleType => {
         const modulesForType = extensionManager.modules[moduleType];
-
+        console.log('moduleType', moduleType);
         expect(modulesForType.length).toBe(1);
       });
     });

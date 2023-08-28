@@ -1,4 +1,9 @@
-import { ReconstructionIssues } from './../enums.js';
+import toNumber from './toNumber';
+import sortInstancesByPosition from './sortInstancesByPosition';
+
+// TODO: Is 10% a reasonable spacingTolerance for spacing?
+const spacingTolerance = 0.2;
+const iopTolerance = 0.01;
 
 /**
  * Checks if a series is reconstructable to a 3D volume.
@@ -12,7 +17,7 @@ function isDisplaySetReconstructable(instances) {
     return { value: false };
   }
 
-  const firstInstance = instances[0].getData().metadata;
+  const firstInstance = instances[0];
 
   const Modality = firstInstance.Modality;
   const isMultiframe = firstInstance.NumberOfFrames > 1;
@@ -26,22 +31,100 @@ function isDisplaySetReconstructable(instances) {
     return { value: false };
   }
 
-  if (isMultiframe) {
-    return processMultiframe();
-  } else {
-    return processSingleframe(instances);
+  // Can't reconstruct if all instances don't have the ImagePositionPatient.
+  if (
+    !isMultiframe &&
+    !instances.every(instance => instance.ImagePositionPatient)
+  ) {
+    return { value: false };
   }
+
+  const sortedInstances = sortInstancesByPosition(instances);
+
+  return isMultiframe
+    ? processMultiframe(sortedInstances[0])
+    : processSingleframe(sortedInstances);
 }
 
-/**
- * Process reconstructable multiframes checks
- * TODO: deal with multriframe checks! return false for now as can't reconstruct.
- * *
- * @returns {Object} value and reconstructionIssues.
- */
-function processMultiframe() {
-  const reconstructionIssues = [ReconstructionIssues.MULTIFRAMES];
-  return { value: false, reconstructionIssues };
+function hasPixelMeasurements(multiFrameInstance) {
+  const perFrameSequence =
+    multiFrameInstance.PerFrameFunctionalGroupsSequence?.[0];
+  const sharedSequence = multiFrameInstance.SharedFunctionalGroupsSequence;
+
+  return (
+    Boolean(perFrameSequence?.PixelMeasuresSequence) ||
+    Boolean(sharedSequence?.PixelMeasuresSequence) ||
+    Boolean(
+      multiFrameInstance.PixelSpacing &&
+      (multiFrameInstance.SliceThickness ||
+        multiFrameInstance.SpacingBetweenFrames)
+    )
+  );
+}
+
+function hasOrientation(multiFrameInstance) {
+  const sharedSequence = multiFrameInstance.SharedFunctionalGroupsSequence;
+  const perFrameSequence =
+    multiFrameInstance.PerFrameFunctionalGroupsSequence?.[0];
+
+  return (
+    Boolean(sharedSequence?.PlaneOrientationSequence) ||
+    Boolean(perFrameSequence?.PlaneOrientationSequence) ||
+    Boolean(
+      multiFrameInstance.ImageOrientationPatient ||
+      multiFrameInstance.DetectorInformationSequence?.[0]
+        ?.ImageOrientationPatient
+    )
+  );
+}
+
+function hasPosition(multiFrameInstance) {
+  const perFrameSequence =
+    multiFrameInstance.PerFrameFunctionalGroupsSequence?.[0];
+
+  return (
+    Boolean(perFrameSequence?.PlanePositionSequence) ||
+    Boolean(perFrameSequence?.CTPositionSequence) ||
+    Boolean(
+      multiFrameInstance.ImagePositionPatient ||
+      multiFrameInstance.DetectorInformationSequence?.[0]
+        ?.ImagePositionPatient
+    )
+  );
+}
+
+function isNMReconstructable(multiFrameInstance) {
+  const imageSubType = multiFrameInstance.ImageType?.[2];
+  return imageSubType === 'RECON TOMO' || imageSubType === 'RECON GATED TOMO';
+}
+
+function processMultiframe(multiFrameInstance) {
+  // If we don't have the PixelMeasuresSequence, then the pixel spacing and
+  // slice thickness isn't specified or is changing and we can't reconstruct
+  // the dataset.
+  if (!hasPixelMeasurements(multiFrameInstance)) {
+    return { value: false };
+  }
+
+  if (!hasOrientation(multiFrameInstance)) {
+    console.log('No image orientation information, not reconstructable');
+    return { value: false };
+  }
+
+  if (!hasPosition(multiFrameInstance)) {
+    console.log('No image position information, not reconstructable');
+    return { value: false };
+  }
+
+  if (
+    multiFrameInstance.Modality.includes('NM') &&
+    !isNMReconstructable(multiFrameInstance)
+  ) {
+    return { value: false };
+  }
+
+  // TODO - check spacing consistency
+  return { value: true };
 }
 
 /**
@@ -52,20 +135,22 @@ function processMultiframe() {
  * @returns {Object} value and reconstructionIssues.
  */
 function processSingleframe(instances) {
-  const n = instances.length;
-  const firstImage = instances[0].getData().metadata;
-  const firstImageRows = firstImage.Rows;
-  const firstImageColumns = firstImage.Columns;
-  const firstImageSamplesPerPixel = firstImage.SamplesPerPixel;
-  const firstImageOrientationPatient = firstImage.ImageOrientationPatient;
+  const firstImage = instances[0];
+  const firstImageRows = toNumber(firstImage.Rows);
+  const firstImageColumns = toNumber(firstImage.Columns);
+  const firstImageSamplesPerPixel = toNumber(firstImage.SamplesPerPixel);
+  const firstImageOrientationPatient = toNumber(
+    firstImage.ImageOrientationPatient
+  );
+  const firstImagePositionPatient = toNumber(firstImage.ImagePositionPatient);
 
   const reconstructionIssues = [];
   // Can't reconstruct if we:
   // -- Have a different dimensions within a displaySet.
   // -- Have a different number of components within a displaySet.
   // -- Have different orientations within a displaySet.
-  for (let ii = 1; ii < n; ++ii) {
-    const instance = instances[ii].getData().metadata;
+  for (let i = 1; i < instances.length; i++) {
+    const instance = instances[i];
     const {
       Rows,
       Columns,
@@ -73,12 +158,13 @@ function processSingleframe(instances) {
       ImageOrientationPatient,
     } = instance;
 
-    if (Rows !== firstImageRows || Columns !== firstImageColumns) {
-      reconstructionIssues.push(ReconstructionIssues.VARYING_IMAGESDIMENSIONS);
-    } else if (SamplesPerPixel !== firstImageSamplesPerPixel) {
-      reconstructionIssues.push(ReconstructionIssues.VARYING_IMAGESCOMPONENTS);
-    } else if (
-      !_isSameArray(ImageOrientationPatient, firstImageOrientationPatient)
+    const imageOrientationPatient = toNumber(ImageOrientationPatient);
+
+    if (
+      Rows !== firstImageRows ||
+      Columns !== firstImageColumns ||
+      SamplesPerPixel !== firstImageSamplesPerPixel ||
+      !_isSameOrientation(imageOrientationPatient, firstImageOrientationPatient)
     ) {
       reconstructionIssues.push(ReconstructionIssues.VARYING_IMAGESORIENTATION);
     }
@@ -115,62 +201,57 @@ function isSpacingUniform(instances, datasetIs4D) {
 
   const reconstructionIssues = [];
   let missingFrames = 0;
+  let averageSpacingBetweenFrames;
 
   // Check if frame spacing is approximately equal within a spacingTolerance.
   // If spacing is on a uniform grid but we are missing frames,
   // Allow reconstruction, but pass back the number of missing frames.
-  if (n > 2) {
-    const lastIpp = instances[n - 1].getData().metadata.ImagePositionPatient;
+  if (instances.length > 2) {
+    const lastIpp = toNumber(
+      instances[instances.length - 1].ImagePositionPatient
+    );
 
     // We can't reconstruct if we are missing ImagePositionPatient values
     if (firstImagePositionPatient && lastIpp) {
       const averageSpacingBetweenFrames =
         _getPerpendicularDistance(firstImagePositionPatient, lastIpp) / (n - 1);
 
-      let previousImagePositionPatient = firstImagePositionPatient;
+    averageSpacingBetweenFrames =
+      _getPerpendicularDistance(firstImagePositionPatient, lastIpp) /
+      (instances.length - 1);
 
       for (let ii = 1; ii < n; ++ii) {
         const instance = instances[ii].getData().metadata;
         const { ImagePositionPatient } = instance;
 
-        const spacingBetweenFrames = _getPerpendicularDistance(
-          ImagePositionPatient,
-          previousImagePositionPatient
-        );
+    for (let i = 1; i < instances.length; i++) {
+      const instance = instances[i];
+      // Todo: get metadata from OHIF.MetadataProvider
+      const imagePositionPatient = toNumber(instance.ImagePositionPatient);
 
-        if (datasetIs4D && spacingBetweenFrames < 1e-3) {
-          // the dataset is 4D, if the distance is zero, means that we are
-          // checking the 4th dimension. Do not return, since we want still to
-          // check the 3rd dimension spacing.
-          continue;
+      const spacingBetweenFrames = _getPerpendicularDistance(
+        imagePositionPatient,
+        previousImagePositionPatient
+      );
+      const spacingIssue = _getSpacingIssue(
+        spacingBetweenFrames,
+        averageSpacingBetweenFrames
+      );
+
+      if (spacingIssue) {
+        const issue = spacingIssue.issue;
+
+        if (issue === reconstructionIssues.MISSING_FRAMES) {
+          missingFrames += spacingIssue.missingFrames;
+        } else if (issue === reconstructionIssues.IRREGULAR_SPACING) {
+          return { value: false };
         }
 
-        const spacingIssue = _getSpacingIssue(
-          spacingBetweenFrames,
-          averageSpacingBetweenFrames
-        );
-
-        if (spacingIssue) {
-          const issue = spacingIssue.issue;
-
-          if (issue === ReconstructionIssues.MISSING_FRAMES) {
-            missingFrames += spacingIssue.missingFrames;
-          } else if (issue === ReconstructionIssues.IRREGULAR_SPACING) {
-            reconstructionIssues.push(issue);
-            break;
-          }
-        }
-
-        previousImagePositionPatient = ImagePositionPatient;
-      }
+      previousImagePositionPatient = imagePositionPatient;
     }
   }
 
-  return {
-    isUniform: reconstructionIssues.length === 0 ? true : false,
-    missingFrames,
-    reconstructionIssues,
-  };
+  return { value: true, averageSpacingBetweenFrames };
 }
 
 /**
@@ -231,13 +312,12 @@ function _isSameArray(iop1, iop2) {
   return (
     Math.abs(iop1[0] - iop2[0]) < iopTolerance &&
     Math.abs(iop1[1] - iop2[1]) < iopTolerance &&
-    Math.abs(iop1[2] - iop2[2]) < iopTolerance
+    Math.abs(iop1[2] - iop2[2]) < iopTolerance &&
+    Math.abs(iop1[3] - iop2[3]) < iopTolerance &&
+    Math.abs(iop1[4] - iop2[4]) < iopTolerance &&
+    Math.abs(iop1[5] - iop2[5]) < iopTolerance
   );
 }
-
-// TODO: Is 10% a reasonable spacingTolerance for spacing?
-const spacingTolerance = 0.1;
-const iopTolerance = 0.01;
 
 /**
  * Checks for spacing issues.
@@ -281,5 +361,19 @@ function _getPerpendicularDistance(a, b) {
 }
 
 const constructableModalities = ['MR', 'CT', 'PT', 'NM'];
+const reconstructionIssues = {
+  MISSING_FRAMES: 'missingframes',
+  IRREGULAR_SPACING: 'irregularspacing',
+};
 
-export { isDisplaySetReconstructable, isSpacingUniform };
+export {
+  hasPixelMeasurements,
+  hasOrientation,
+  hasPosition,
+  isNMReconstructable,
+  _isSameOrientation,
+  _getSpacingIssue,
+  _getPerpendicularDistance,
+  reconstructionIssues,
+  constructableModalities,
+};

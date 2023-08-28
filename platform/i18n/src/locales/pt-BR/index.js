@@ -7,9 +7,10 @@ import Header from './Header.json';
 import MeasurementTable from './MeasurementTable.json';
 import StudyList from './StudyList.json';
 import UserPreferencesModal from './UserPreferencesModal.json';
-import ViewportDownloadForm from './ViewportDownloadForm.json';
+import MeasurementTable from './MeasurementTable.json';
+import Messages from './Messages.json';
 
-export default { 
+export default {
   'pt-BR': {
     AboutModal,
     Buttons,
@@ -20,6 +21,7 @@ export default {
     MeasurementTable,
     StudyList,
     UserPreferencesModal,
-    ViewportDownloadForm,
-  }
+    MeasurementTable,
+    Messages,
+  },
 };

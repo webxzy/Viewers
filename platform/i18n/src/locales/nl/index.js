@@ -9,17 +9,12 @@ import StudyList from './StudyList.json';
 import UserPreferencesModal from './UserPreferencesModal.json';
 import ViewportDownloadForm from './ViewportDownloadForm.json';
 
-export default { 
-  'nl': {
-    AboutModal,
+export default {
+  nl: {
     Buttons,
     CineDialog,
     Common,
     DatePicker,
     Header,
-    MeasurementTable,
-    StudyList,
-    UserPreferencesModal,
-    ViewportDownloadForm,
-  }
+  },
 };

@@ -6,26 +6,27 @@ cd "$(dirname "$0")"
 cd .. # Up to project root
 
 # Helpful to verify which versions we're using
+echo 'My yarn version is... '
+
 yarn -v
 node -v
-
-# Install build deps and all monorepo package dependencies. Yarn Workspaces
-# should also symlink all projects appropriately
-yarn run lerna:restore
-yarn install --no-ignore-optional --pure-lockfile
 
 # Build && Move PWA Output
 yarn run build:ci
 mkdir -p ./.netlify/www/pwa
-mv platform/viewer/dist/* .netlify/www/pwa -v
+mv platform/app/dist/* .netlify/www/pwa -v
+echo 'Web application built and copied'
 
-# Build && Move script output
-# yarn run build:package
+# Build && Move Docusaurus Output (for the docs themselves)
+cd platform/docs
+yarn install
+yarn run build
+cd ../..
+mkdir -p ./.netlify/www/docs
+mv platform/docs/build/* .netlify/www/docs -v
+echo 'Docs built (docusaurus) and copied'
 
 # Cache all of the node_module dependencies in
 # extensions, modules, and platform packages
 yarn run lerna:cache
 echo 'Nothing left to see here. Go home, folks.'
-
-# Build using react-scripts
-# npx cross-env PUBLIC_URL=/demo APP_CONFIG=config/netlify.js react-scripts --max_old_space_size=4096 build

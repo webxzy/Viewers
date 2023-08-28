@@ -1,4 +1,4 @@
-import CommandsManager from './CommandsManager.js';
+import CommandsManager from './CommandsManager';
 import log from './../log.js';
 
 jest.mock('./../log.js');
@@ -17,7 +17,6 @@ describe('CommandsManager', () => {
           viewers: 'Test',
         };
       },
-      getActiveContexts: () => ['VIEWER', 'ACTIVE_VIEWER::CORNERSTONE'],
     };
 
   beforeEach(() => {
@@ -32,12 +31,6 @@ describe('CommandsManager', () => {
 
     expect(localCommandsManager).toHaveProperty('contexts');
     expect(localCommandsManager.contexts).toEqual({});
-  });
-
-  it('logs a warning if instantiated without getAppState or getActiveContexts', () => {
-    new CommandsManager();
-
-    expect(log.warn.mock.calls.length).toBe(1);
   });
 
   describe('createContext()', () => {
@@ -178,16 +171,6 @@ describe('CommandsManager', () => {
       commandsManager.runCommand('TestCommand', {}, 'VIEWER');
 
       expect(command.commandFn.mock.calls.length).toBe(1);
-    });
-
-    it('Calls commandFn w/ properties from appState', () => {
-      commandsManager.registerCommand('VIEWER', 'TestCommand', command);
-      commandsManager.runCommand('TestCommand', {}, 'VIEWER');
-
-      expect(command.commandFn.mock.calls.length).toBe(1);
-      expect(command.commandFn.mock.calls[0][0].viewers).toEqual(
-        commandsManagerConfig.getAppState().viewers
-      );
     });
 
     it('Calls commandFn w/ command definition options', () => {

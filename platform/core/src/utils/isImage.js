@@ -12,6 +12,7 @@ const imagesTypes = [
   sopClassDictionary.EnhancedCTImageStorage,
   sopClassDictionary.LegacyConvertedEnhancedCTImageStorage,
   sopClassDictionary.UltrasoundMultiframeImageStorage,
+  sopClassDictionary.EnhancedUSVolumeStorage,
   sopClassDictionary.MRImageStorage,
   sopClassDictionary.EnhancedMRImageStorage,
   sopClassDictionary.EnhancedMRColorImageStorage,
@@ -57,6 +58,8 @@ const imagesTypes = [
  * @returns {boolean} - true if it has image data
  */
 export const isImage = SOPClassUID => {
-  if (!SOPClassUID) return false;
+  if (!SOPClassUID) {
+    return false;
+  }
   return imagesTypes.indexOf(SOPClassUID) !== -1;
 };
