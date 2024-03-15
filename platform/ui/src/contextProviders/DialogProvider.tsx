@@ -1,11 +1,4 @@
-import React, {
-  useState,
-  createContext,
-  useContext,
-  useCallback,
-  useEffect,
-  useRef,
-} from 'react';
+import React, { useState, createContext, useContext, useCallback, useEffect, useRef } from 'react';
 
 import PropTypes from 'prop-types';
 import Draggable from 'react-draggable';
@@ -14,7 +7,7 @@ import classNames from 'classnames';
 /*
  * This is a workaround to import things from ohif/core as docz does
  * not allow us to access window element and @ohif/core does use it once
- * we import to instanciate cornerstone
+ * we import to instantiate cornerstone
  */
 import guid from './../../../core/src/utils/guid';
 
@@ -97,8 +90,7 @@ const DialogProvider = ({ children, service }) => {
    * @returns void
    */
   const dismiss = useCallback(
-    ({ id }) =>
-      setDialogs(dialogs => dialogs.filter(dialog => dialog.id !== id)),
+    ({ id }) => setDialogs(dialogs => dialogs.filter(dialog => dialog.id !== id)),
     []
   );
 
@@ -122,9 +114,7 @@ const DialogProvider = ({ children, service }) => {
   const _bringToFront = useCallback(id => {
     setDialogs(dialogs => {
       const topDialog = dialogs.find(dialog => dialog.id === id);
-      return topDialog
-        ? [...dialogs.filter(dialog => dialog.id !== id), topDialog]
-        : dialogs;
+      return topDialog ? [...dialogs.filter(dialog => dialog.id !== id), topDialog] : dialogs;
     });
   }, []);
 
@@ -158,8 +148,7 @@ const DialogProvider = ({ children, service }) => {
         showOverlay,
       } = dialog;
 
-      let position =
-        (preservePosition && lastDialogPosition) || defaultPosition;
+      let position = (preservePosition && lastDialogPosition) || defaultPosition;
       if (centralize) {
         position = centerPositions.find(position => position.id === id);
       }
@@ -174,14 +163,7 @@ const DialogProvider = ({ children, service }) => {
           onStart={event => {
             const e = event || (typeof window !== 'undefined' && window.event);
             const target = e.target || e.srcElement;
-            const BLACKLIST = [
-              'SVG',
-              'BUTTON',
-              'PATH',
-              'INPUT',
-              'SPAN',
-              'LABEL',
-            ];
+            const BLACKLIST = ['SVG', 'BUTTON', 'PATH', 'INPUT', 'SPAN', 'LABEL'];
             if (BLACKLIST.includes(target.tagName.toUpperCase())) {
               return false;
             }
@@ -217,7 +199,10 @@ const DialogProvider = ({ children, service }) => {
             style={{ zIndex: '999', position: 'absolute', width: '350px' }}
             onClick={() => _bringToFront(id)}
           >
-            <DialogContent {...dialog} {...contentProps} />
+            <DialogContent
+              {...dialog}
+              {...contentProps}
+            />
           </div>
         </Draggable>
       );
@@ -226,7 +211,10 @@ const DialogProvider = ({ children, service }) => {
         const background = 'bg-black bg-opacity-50';
         const overlay = 'fixed z-50 left-0 top-0 w-full h-full overflow-auto';
         return (
-          <div className={classNames(overlay, background)} key={id}>
+          <div
+            className={classNames(overlay, background)}
+            key={id}
+          >
             {component}
           </div>
         );
@@ -240,7 +228,10 @@ const DialogProvider = ({ children, service }) => {
 
       if (typeof onClickOutside === 'function') {
         result = (
-          <OutsideAlerter key={id} onClickOutside={onClickOutside}>
+          <OutsideAlerter
+            key={id}
+            onClickOutside={onClickOutside}
+          >
             {result}
           </OutsideAlerter>
         );
@@ -275,7 +266,10 @@ const DialogProvider = ({ children, service }) => {
   return (
     <DialogContext.Provider value={{ create, dismiss, dismissAll, isEmpty }}>
       {!isEmpty() && (
-        <div className="w-full h-full absolute" onKeyDown={onKeyDownHandler}>
+        <div
+          className="absolute h-full w-full"
+          onKeyDown={onKeyDownHandler}
+        >
           {renderDialogs()}
         </div>
       )}
@@ -293,7 +287,10 @@ export const withDialog = Component => {
   return function WrappedComponent(props) {
     const { create, dismiss, dismissAll, isEmpty } = useDialog();
     return (
-      <Component {...props} dialog={{ create, dismiss, dismissAll, isEmpty }} />
+      <Component
+        {...props}
+        dialog={{ create, dismiss, dismissAll, isEmpty }}
+      />
     );
   };
 };
@@ -303,11 +300,8 @@ DialogProvider.defaultProps = {
 };
 
 DialogProvider.propTypes = {
-  children: PropTypes.oneOfType([
-    PropTypes.arrayOf(PropTypes.node),
-    PropTypes.node,
-    PropTypes.func,
-  ]).isRequired,
+  children: PropTypes.oneOfType([PropTypes.arrayOf(PropTypes.node), PropTypes.node, PropTypes.func])
+    .isRequired,
   service: PropTypes.shape({
     setServiceImplementation: PropTypes.func,
   }),

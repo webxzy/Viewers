@@ -12,7 +12,7 @@ services:
       # Project root
       context: ./../../../../
       # Relative to context
-      dockerfile: ./platform/viewer/.recipes/OpenResty-Orthanc-Keycloak/dockerfile
+      dockerfile: ./platform/app/.recipes/OpenResty-Orthanc-Keycloak/dockerfile
     image: webapp:latest
     container_name: webapp
     volumes:
@@ -35,7 +35,7 @@ services:
   # TODO: Update to use Postgres
   # https://github.com/mrts/docker-postgresql-multiple-databases
   orthanc:
-    image: jodogne/orthanc-plugins:1.9.7
+    image: jodogne/orthanc-plugins
     hostname: orthanc
     container_name: orthanc
     volumes:

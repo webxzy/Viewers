@@ -1,30 +1,11 @@
-navigator.serviceWorker.getRegistrations().then(function(registrations) {
+navigator.serviceWorker.getRegistrations().then(function (registrations) {
   for (let registration of registrations) {
     registration.unregister();
   }
 });
 
 // https://developers.google.com/web/tools/workbox/guides/troubleshoot-and-debug
-
-//
-// Uncomment the 'Embedded version' and use the 'Internet version' if
-// the internet version is preferred. Make sure to use the correct
-// version though.
-//
-
-// Embedded version
-importScripts('/third_party/workbox/workbox-v5.1.4/workbox-sw.js');
-
-workbox.setConfig({
-  modulePathPrefix: '/third_party/workbox/workbox-v5.1.4/',
-});
-
-// Internet version
-/*
-importScripts(
-  'https://storage.googleapis.com/workbox-cdn/releases/5.0.0-beta.1/workbox-sw.js'
-);
-*/
+importScripts('https://storage.googleapis.com/workbox-cdn/releases/5.0.0-beta.1/workbox-sw.js');
 
 // Install newest
 // https://developers.google.com/web/tools/workbox/modules/workbox-core

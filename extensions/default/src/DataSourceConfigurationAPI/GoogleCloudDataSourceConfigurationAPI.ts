@@ -29,15 +29,15 @@ const initialUrl = 'https://cloudresourcemanager.googleapis.com/v1';
 const baseHealthcareUrl = 'https://healthcare.googleapis.com/v1';
 
 class GoogleCloudDataSourceConfigurationAPIItem
-  implements Types.BaseDataSourceConfigurationAPIItem {
+  implements Types.BaseDataSourceConfigurationAPIItem
+{
   id: string;
   name: string;
   url: string;
   itemType: ItemType;
 }
 
-class GoogleCloudDataSourceConfigurationAPI
-  implements Types.BaseDataSourceConfigurationAPI {
+class GoogleCloudDataSourceConfigurationAPI implements Types.BaseDataSourceConfigurationAPI {
   private _extensionManager: ExtensionManager;
   private _fetchOptions: { method: string; headers: unknown };
   private _dataSourceName: string;
@@ -45,8 +45,7 @@ class GoogleCloudDataSourceConfigurationAPI
   constructor(dataSourceName, servicesManager, extensionManager) {
     this._dataSourceName = dataSourceName;
     this._extensionManager = extensionManager;
-    const userAuthenticationService =
-      servicesManager.services.userAuthenticationService;
+    const userAuthenticationService = servicesManager.services.userAuthenticationService;
     this._fetchOptions = {
       method: 'GET',
       headers: userAuthenticationService.getAuthorizationHeader(),
@@ -89,9 +88,7 @@ class GoogleCloudDataSourceConfigurationAPI
       // Last configurable item, so update the data source configuration.
       const url = `${googleCloudItem.url}/dicomWeb`;
       const dataSourceDefCopy = JSON.parse(
-        JSON.stringify(
-          this._extensionManager.getDataSourceDefinition(this._dataSourceName)
-        )
+        JSON.stringify(this._extensionManager.getDataSourceDefinition(this._dataSourceName))
       );
       dataSourceDefCopy.configuration = {
         ...dataSourceDefCopy.configuration,
@@ -136,19 +133,26 @@ class GoogleCloudDataSourceConfigurationAPI
     return subItems;
   }
 
-  async getConfiguredItems(): Promise<
-    Array<GoogleCloudDataSourceConfigurationAPIItem>
-  > {
+  async getConfiguredItems(): Promise<Array<GoogleCloudDataSourceConfigurationAPIItem>> {
     const dataSourceDefinition = this._extensionManager.getDataSourceDefinition(
       this._dataSourceName
     );
 
     const url = dataSourceDefinition.configuration.wadoUriRoot;
     const projectsIndex = url.indexOf('projects');
+    // Split the configured URL into (essentially) pairs (i.e. item type followed by item)
+    // Explicitly: ['projects','aProject','locations','aLocation','datasets','aDataSet','dicomStores','aDicomStore']
+    // Note that a partial configuration will have a subset of the above.
     const urlSplit = url.substring(projectsIndex).split('/');
 
     const configuredItems = [];
-    for (let itemType = 0; itemType < 4; itemType += 1) {
+
+    for (
+      let itemType = 0;
+      // the number of configured items is either the max (4) or the number extracted from the url split
+      itemType < 4 && (itemType + 1) * 2 < urlSplit.length;
+      itemType += 1
+    ) {
       if (itemType === ItemType.projects) {
         const projectId = urlSplit[1];
         const projectUrl = `${initialUrl}/projects/${projectId}`;
@@ -207,9 +211,7 @@ class GoogleCloudDataSourceConfigurationAPI
             fetchOptions,
             fetchSearchParams
           );
-          data[ItemType[fetchItemType]] = data[ItemType[fetchItemType]].concat(
-            subPageData
-          );
+          data[ItemType[fetchItemType]] = data[ItemType[fetchItemType]].concat(subPageData);
         }
         if (data[ItemType[fetchItemType]]) {
           return data[ItemType[fetchItemType]];

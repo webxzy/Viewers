@@ -11,6 +11,7 @@ import user from './user.js';
 import utils from './utils';
 import defaults from './defaults';
 import * as Types from './types';
+import * as Enums from './enums';
 
 import {
   CineService,
@@ -33,10 +34,7 @@ import {
   PanelService,
 } from './services';
 
-import {
-  DisplaySetMessage,
-  DisplaySetMessageList,
-} from './services/DisplaySetService';
+import { DisplaySetMessage, DisplaySetMessageList } from './services/DisplaySetService';
 
 import IWebApiDataSource from './DataSources/IWebApiDataSource';
 
@@ -123,6 +121,7 @@ export {
   DicomMetadataStore,
   pubSubServiceInterface,
   PubSubService,
+  Enums,
   Types,
   PanelService,
 };
